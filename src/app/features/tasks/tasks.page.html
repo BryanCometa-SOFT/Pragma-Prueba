@@ -1,0 +1,121 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Mis Tareas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- ==================== ESTADO VACÍO GLOBAL ==================== -->
+  @if (taskService.tasks().length === 0) {
+    <div class="empty-state">
+      <ion-icon name="clipboard-outline" class="empty-icon"></ion-icon>
+      <h2>No tenés tareas</h2>
+      <p>Tocá el botón <strong>+</strong> para crear la primera</p>
+    </div>
+  }
+
+  <!-- ==================== PENDIENTES ==================== -->
+  <div class="section-header">
+    <h3>Pendientes</h3>
+    <ion-badge color="warning">{{ taskService.pendingCount() }}</ion-badge>
+  </div>
+
+  @if (taskService.tasks().length > 0) {
+    @if (pendingTasks().length > 0) {
+      <ion-list lines="none" class="task-list">
+        @for (task of pendingTasks(); track task.id) {
+
+          <ion-item class="task-item">
+            <ion-label>
+              <h2>{{ task.title }}</h2>
+              @if (task.description) {
+                <p>{{ task.description }}</p>
+              }
+              <div class="task-meta">
+                <span class="task-id">{{ formatId(task.id) }}</span>
+                <span class="meta-sep">·</span>
+                <span>Creada {{ formatDate(task.createdAt) }}</span>
+              </div>
+            </ion-label>
+
+            <ion-button slot="end" fill="clear" size="small" (click)="confirmComplete(task)">
+              <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
+            </ion-button>
+            <ion-button slot="end" fill="clear" size="small" (click)="openEditModal(task)">
+              <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+            </ion-button>
+            <ion-button slot="end" fill="clear" size="small" color="danger" (click)="confirmDelete(task)">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-item>
+
+        }
+      </ion-list>
+    } @else {
+      <div class="section-empty">
+        <ion-icon name="checkmark-done-outline"></ion-icon>
+        <span>¡Todo listo! Nada pendiente</span>
+      </div>
+    }
+  }
+
+  <!-- ==================== COMPLETADAS ==================== -->
+  <div
+    class="section-header completed-header"
+    (click)="taskService.completedCount() > 0 && showCompleted.set(!showCompleted())">
+    <h3>Completadas</h3>
+    <div class="section-header-right">
+      <ion-badge color="success">{{ taskService.completedCount() }}</ion-badge>
+      @if (taskService.completedCount() > 0) {
+        <ion-icon
+          [name]="showCompleted() ? 'chevron-up-outline' : 'chevron-down-outline'"
+          class="toggle-icon">
+        </ion-icon>
+      }
+    </div>
+  </div>
+
+  @if (taskService.tasks().length > 0) {
+    @if (completedTasks().length > 0) {
+      @if (showCompleted()) {
+        <ion-list lines="none" class="task-list">
+          @for (task of completedTasks(); track task.id) {
+            <ion-item class="task-item completed-item">
+              <ion-icon
+                slot="start"
+                name="checkmark-circle"
+                color="success"
+                class="completed-icon">
+              </ion-icon>
+              <ion-label>
+                <h2 class="completed-text">{{ task.title }}</h2>
+                @if (task.description) {
+                  <p class="completed-text">{{ task.description }}</p>
+                }
+                <div class="task-meta">
+                  <span class="task-id">{{ formatId(task.id) }}</span>
+                  <span class="meta-sep">·</span>
+                  <span>Completada {{ formatDate(task.completedAt) }}</span>
+                </div>
+              </ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    } @else {
+      <div class="section-empty">
+        <ion-icon name="time-outline"></ion-icon>
+        <span>Aún no has completado ninguna</span>
+      </div>
+    }
+  }
+
+  <!-- ==================== FAB ==================== -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="openAddModal()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>
