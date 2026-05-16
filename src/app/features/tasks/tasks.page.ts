@@ -39,6 +39,10 @@ export class TasksPage {
   showCompleted = signal(false);
   /** ID de la categoría seleccionada para filtrar, null = sin filtro */
   selectedCategoryId = signal<string | null>(null);
+  /** Cantidad de tareas visibles (infinite scroll), se resetea al cambiar filtro/búsqueda */
+  displayCount = signal(20);
+  /** Cantidad de completadas visibles en infinite scroll */
+  displayCompletedCount = signal(10);
   /** Texto ingresado en el buscador (sin debounce) */
   searchQuery = signal('');
   /** Texto de búsqueda ya debounced (300ms), usado por la señal computada */
@@ -69,7 +73,17 @@ export class TasksPage {
     const { data } = await modal.onDidDismiss();
     if (data) {
       this.taskService.add(data.title, data.description, data.categoryId);
+      this.clearFilters();
     }
+  }
+
+  /** Limpia filtros y búsqueda para mostrar la tarea recién creada */
+  private clearFilters(): void {
+    this.selectedCategoryId.set(null);
+    this.searchQuery.set('');
+    this.debouncedSearch.set('');
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.displayCount.set(20);
   }
 
   /**
@@ -146,12 +160,53 @@ export class TasksPage {
         t.description.toLowerCase().includes(q)
       );
     }
-    return tasks;
+    // Más nuevas primero
+    return tasks.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   });
+
+  /** Señal computada: solo las primeras N tareas visibles (infinite scroll) */
+  readonly visiblePendingTasks = computed(() =>
+    this.filteredPendingTasks().slice(0, this.displayCount())
+  );
 
   /** Retorna la categoría dado su ID (para mostrar nombre e ícono en chips) */
   getCategory(id: string) {
     return this.categoryService.getById(id);
+  }
+
+  /* ==================== INFINITE SCROLL ==================== */
+
+  /** Cambia el filtro de categoría y resetea el infinite scroll */
+  selectCategory(catId: string | null): void {
+    this.selectedCategoryId.set(
+      this.selectedCategoryId() === catId ? null : catId
+    );
+    this.resetDisplayCount();
+  }
+
+  /**
+   * Carga 20 tareas más al hacer scroll hasta el final.
+   * @param event - Evento ionInfinite del ion-infinite-scroll.
+   */
+  loadMore(event: any): void {
+    this.displayCount.update((n) => n + 20);
+    setTimeout(() => event.target.complete(), 50);
+  }
+
+  /** Señal computada: completadas visibles (infinite scroll) */
+  readonly visibleCompletedTasks = computed(() =>
+    this.taskService.completedTasks().slice(0, this.displayCompletedCount())
+  );
+
+  /** Carga 10 completadas más al hacer scroll */
+  loadMoreCompleted(event: any): void {
+    this.displayCompletedCount.update((n) => n + 10);
+    setTimeout(() => event.target.complete(), 50);
+  }
+
+  /** Resetea el contador a 20 cuando cambia el filtro o la búsqueda */
+  private resetDisplayCount(): void {
+    this.displayCount.set(20);
   }
 
   /* ==================== BÚSQUEDA CON DEBOUNCE ==================== */
@@ -164,6 +219,7 @@ export class TasksPage {
   onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value ?? '';
     this.searchQuery.set(value);
+    this.resetDisplayCount();
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       this.debouncedSearch.set(value);

@@ -41,11 +41,19 @@ export class TaskService {
   /** Señal computada: total de tareas completadas */
   readonly completedCount = computed(() => this.tasks().filter((t) => t.completed).length);
 
-  /** Señal computada: array de tareas pendientes (no completadas) */
-  readonly pendingTasks = computed(() => this.tasks().filter((t) => !t.completed));
+  /** Señal computada: array de tareas pendientes (más nuevas primero) */
+  readonly pendingTasks = computed(() =>
+    this.tasks()
+      .filter((t) => !t.completed)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+  );
 
-  /** Señal computada: array de tareas completadas */
-  readonly completedTasks = computed(() => this.tasks().filter((t) => t.completed));
+  /** Señal computada: array de tareas completadas (más recientes primero) */
+  readonly completedTasks = computed(() =>
+    this.tasks()
+      .filter((t) => t.completed)
+      .sort((a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0))
+  );
 
   private storage = inject(StorageService);
 
@@ -152,7 +160,7 @@ export class TaskService {
       createdAt: new Date(),
       completedAt: null,
     };
-    this.tasks.update((tasks) => [...tasks, task]);
+    this.tasks.update((tasks) => [task, ...tasks]);
     this.persist();
     return task;
   }

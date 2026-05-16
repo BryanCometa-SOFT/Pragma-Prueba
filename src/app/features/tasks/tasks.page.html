@@ -31,17 +31,17 @@
   <!-- ==================== FILTRO POR CATEGORÍA ==================== -->
   @if (categoryService.categories().length > 0) {
     <div class="category-filter">
-      <ion-chip
-        [outline]="selectedCategoryId() !== null"
-        [color]="selectedCategoryId() === null ? 'primary' : 'medium'"
-        (click)="selectedCategoryId.set(null)">
-        Todas
-      </ion-chip>
-      @for (cat of categoryService.categories(); track cat.id) {
         <ion-chip
-          [outline]="selectedCategoryId() !== cat.id"
-          [color]="selectedCategoryId() === cat.id ? 'primary' : 'medium'"
-          (click)="selectedCategoryId.set(selectedCategoryId() === cat.id ? null : cat.id)">
+          [outline]="selectedCategoryId() !== null"
+          [color]="selectedCategoryId() === null ? 'primary' : 'medium'"
+          (click)="selectCategory(null)">
+          Todas
+        </ion-chip>
+        @for (cat of categoryService.categories(); track cat.id) {
+          <ion-chip
+            [outline]="selectedCategoryId() !== cat.id"
+            [color]="selectedCategoryId() === cat.id ? 'primary' : 'medium'"
+            (click)="selectCategory(cat.id)">
           <ion-icon [name]="cat.icon" [color]="selectedCategoryId() === cat.id ? 'primary' : 'medium'"></ion-icon>
           <ion-label>{{ cat.name }}</ion-label>
         </ion-chip>
@@ -67,7 +67,7 @@
   @if (taskService.tasks().length > 0) {
     @if (filteredPendingTasks().length > 0) {
       <ion-list lines="none" class="task-list">
-        @for (task of filteredPendingTasks(); track task.id) {
+        @for (task of visiblePendingTasks(); track task.id) {
 
           <ion-item @taskItem class="task-item">
             <ion-label>
@@ -107,6 +107,14 @@
 
         }
       </ion-list>
+      @if (displayCount() < filteredPendingTasks().length) {
+        <ion-infinite-scroll
+          [disabled]="displayCount() >= filteredPendingTasks().length"
+          (ionInfinite)="loadMore($event)">
+          <ion-infinite-scroll-content loadingText="Cargando más...">
+          </ion-infinite-scroll-content>
+        </ion-infinite-scroll>
+      }
     } @else {
       @if (taskService.pendingCount() > 0) {
         <div class="section-empty">
@@ -142,7 +150,7 @@
     @if (taskService.completedTasks().length > 0) {
       @if (showCompleted()) {
         <ion-list @sectionFade lines="none" class="task-list">
-          @for (task of taskService.completedTasks(); track task.id) {
+          @for (task of visibleCompletedTasks(); track task.id) {
             <ion-item @taskItem class="task-item completed-item">
               <ion-icon
                 slot="start"
@@ -170,6 +178,14 @@
             </ion-item>
           }
         </ion-list>
+        @if (displayCompletedCount() < taskService.completedTasks().length) {
+          <ion-infinite-scroll
+            [disabled]="displayCompletedCount() >= taskService.completedTasks().length"
+            (ionInfinite)="loadMoreCompleted($event)">
+            <ion-infinite-scroll-content loadingText="Cargando más...">
+            </ion-infinite-scroll-content>
+          </ion-infinite-scroll>
+        }
       }
     } @else {
       <div class="section-empty">

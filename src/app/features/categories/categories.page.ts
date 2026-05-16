@@ -31,6 +31,8 @@ export class CategoriesPage {
   /** Texto de búsqueda ya debounced (300ms), usado por filteredCategories */
   private debouncedSearch = signal('');
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Cantidad de categorías visibles (infinite scroll) */
+  displayCount = signal(10);
 
   /** Señal computada: categorías filtradas por texto de búsqueda (memoizada) */
   readonly filteredCategories = computed(() => {
@@ -42,6 +44,11 @@ export class CategoriesPage {
     );
   });
 
+  /** Señal computada: categorías visibles (infinite scroll) */
+  readonly visibleCategories = computed(() =>
+    this.filteredCategories().slice(0, this.displayCount())
+  );
+
   /**
    * Maneja el input del buscador con debounce de 300ms para evitar
    * recálculos excesivos de filteredCategories mientras el usuario escribe.
@@ -50,10 +57,22 @@ export class CategoriesPage {
   onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value ?? '';
     this.searchQuery.set(value);
+    this.resetDisplayCount();
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       this.debouncedSearch.set(value);
     }, 300);
+  }
+
+  /** Resetea el contador a 10 al cambiar la búsqueda */
+  private resetDisplayCount(): void {
+    this.displayCount.set(10);
+  }
+
+  /** Carga 10 categorías más al hacer scroll */
+  loadMore(event: any): void {
+    this.displayCount.update((n) => n + 10);
+    setTimeout(() => event.target.complete(), 50);
   }
 
   /**

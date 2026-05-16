@@ -30,7 +30,7 @@
 
   @if (filteredCategories().length > 0) {
     <ion-list lines="none">
-      @for (cat of filteredCategories(); track cat.id) {
+      @for (cat of visibleCategories(); track cat.id) {
         <ion-item class="cat-item">
           <ion-icon slot="start" [name]="cat.icon" color="primary"></ion-icon>
           <ion-label>
@@ -49,6 +49,14 @@
         </ion-item>
       }
     </ion-list>
+    @if (displayCount() < filteredCategories().length) {
+      <ion-infinite-scroll
+        [disabled]="displayCount() >= filteredCategories().length"
+        (ionInfinite)="loadMore($event)">
+        <ion-infinite-scroll-content loadingText="Cargando más...">
+        </ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    }
   }
 
   @if (remoteConfig.enableCreate()) {
