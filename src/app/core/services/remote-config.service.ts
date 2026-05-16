@@ -62,6 +62,8 @@ export class RemoteConfigService {
   async init(): Promise<void> {
     await this.refresh();
     this.startRealtimeListener();
+    // Refuerzo a los 5s mientras el SSE termina de establecerse
+    setTimeout(() => this.refresh(), 5000);
   }
 
   /** Fuerza una recarga inmediata de flags desde Firebase (usado por pull-to-refresh) */
@@ -104,8 +106,8 @@ export class RemoteConfigService {
           console.log('[RemoteConfig] Firebase notificó cambios en:', keys);
           void this.onConfigChanged();
         },
-        error: (err) => {
-          console.warn('[RemoteConfig] Error en SSE:', err.message);
+        error: () => {
+          // Error transitorio de red, Firebase reintenta automáticamente
         },
         complete: () => {
           // El stream de Remote Config nunca se cierra, pero TS lo requiere
