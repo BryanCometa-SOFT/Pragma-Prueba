@@ -23,6 +23,10 @@ log.txt
 /platforms
 /plugins
 
+# Capacitor (se regeneran con `npx cap add android` / `npx cap add ios`)
+/android
+/ios
+
 # Compiled output
 /dist
 /tmp
@@ -72,4 +76,4 @@ Thumbs.db
 .agents
 skills-lock.json
 
-environments/environment.prod.ts
+src/environments/environment.prod.ts

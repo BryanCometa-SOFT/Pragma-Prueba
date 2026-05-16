@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
+  appId: 'com.pragma.todo',
   appName: 'pragma-technical-test',
   webDir: 'www'
 };

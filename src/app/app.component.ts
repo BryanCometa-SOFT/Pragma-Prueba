@@ -8,5 +8,6 @@ import { RemoteConfigService } from './core/services/remote-config.service';
   standalone: false,
 })
 export class AppComponent {
+  /** Servicio de feature flags inyectado para controlar visibilidad del menú */
   remoteConfig = inject(RemoteConfigService);
 }

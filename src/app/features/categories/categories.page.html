@@ -10,6 +10,16 @@
 
 <ion-content class="ion-padding">
 
+  @if (categoryService.categories().length > 0) {
+    <ion-searchbar
+      [value]="searchQuery()"
+      (ionInput)="onSearchInput($event)"
+      placeholder="Buscar categorías..."
+      debounce="0"
+      animated="true">
+    </ion-searchbar>
+  }
+
   @if (categoryService.categories().length === 0) {
     <div class="empty-state">
       <ion-icon name="pricetags-outline" class="empty-icon"></ion-icon>
@@ -18,29 +28,35 @@
     </div>
   }
 
-  @if (categoryService.categories().length > 0) {
+  @if (filteredCategories().length > 0) {
     <ion-list lines="none">
-      @for (cat of categoryService.categories(); track cat.id) {
+      @for (cat of filteredCategories(); track cat.id) {
         <ion-item class="cat-item">
           <ion-icon slot="start" [name]="cat.icon" color="primary"></ion-icon>
           <ion-label>
             <h2>{{ cat.name }}</h2>
           </ion-label>
+          @if (remoteConfig.enableEdit()) {
           <ion-button slot="end" fill="clear" size="small" (click)="openEditModal(cat)">
             <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
           </ion-button>
+          }
+          @if (remoteConfig.enableDelete()) {
           <ion-button slot="end" fill="clear" size="small" color="danger" (click)="confirmDelete(cat)">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
+          }
         </ion-item>
       }
     </ion-list>
   }
 
+  @if (remoteConfig.enableCreate()) {
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click)="openAddModal()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+  }
 
 </ion-content>

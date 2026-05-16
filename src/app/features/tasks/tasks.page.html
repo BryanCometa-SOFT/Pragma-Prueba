@@ -9,6 +9,25 @@
 
 <ion-content class="ion-padding">
 
+  <!-- ==================== PULL TO REFRESH ==================== -->
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content
+      pullingIcon="chevron-down-outline"
+      refreshingSpinner="crescent">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <!-- ==================== BUSCADOR ==================== -->
+  @if (taskService.tasks().length > 0) {
+    <ion-searchbar
+      [value]="searchQuery()"
+      (ionInput)="onSearchInput($event)"
+      placeholder="Buscar tareas..."
+      debounce="0"
+      animated="true">
+    </ion-searchbar>
+  }
+
   <!-- ==================== FILTRO POR CATEGORÍA ==================== -->
   @if (remoteConfig.enableCategories() && categoryService.categories().length > 0) {
     <div class="category-filter">
@@ -50,7 +69,7 @@
       <ion-list lines="none" class="task-list">
         @for (task of filteredPendingTasks(); track task.id) {
 
-          <ion-item class="task-item">
+          <ion-item @taskItem class="task-item">
             <ion-label>
               <h2>{{ task.title }}</h2>
               @if (task.description) {
@@ -69,9 +88,11 @@
               </div>
             </ion-label>
 
+            @if (remoteConfig.enableComplete()) {
             <ion-button slot="end" fill="clear" size="small" (click)="confirmComplete(task)">
               <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
             </ion-button>
+            }
             @if (remoteConfig.enableEdit()) {
               <ion-button slot="end" fill="clear" size="small" (click)="openEditModal(task)">
                 <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
@@ -118,11 +139,11 @@
   </div>
 
   @if (taskService.tasks().length > 0) {
-    @if (completedTasks().length > 0) {
+    @if (taskService.completedTasks().length > 0) {
       @if (showCompleted()) {
-        <ion-list lines="none" class="task-list">
-          @for (task of completedTasks(); track task.id) {
-            <ion-item class="task-item completed-item">
+        <ion-list @sectionFade lines="none" class="task-list">
+          @for (task of taskService.completedTasks(); track task.id) {
+            <ion-item @taskItem class="task-item completed-item">
               <ion-icon
                 slot="start"
                 name="checkmark-circle"

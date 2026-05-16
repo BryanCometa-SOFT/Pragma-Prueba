@@ -16,7 +16,10 @@ describe('TasksPage', () => {
   beforeEach(async () => {
     taskServiceMock = jasmine.createSpyObj<TaskService>(
       'TaskService', ['add', 'update', 'toggleComplete', 'delete'],
-      { tasks: signal([]), taskCount: signal(0), pendingCount: signal(0), completedCount: signal(0) },
+      {
+        tasks: signal([]), taskCount: signal(0), pendingCount: signal(0),
+        completedCount: signal(0), pendingTasks: signal([]), completedTasks: signal([]),
+      },
     );
     categoryServiceMock = jasmine.createSpyObj<CategoryService>(
       'CategoryService', ['getById'],

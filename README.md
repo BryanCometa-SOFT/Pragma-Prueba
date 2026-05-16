@@ -18,15 +18,21 @@ Aplicación híbrida de lista de tareas construida con **Ionic 8 + Angular 20 + 
 
 ### 2. ¿Qué técnicas de optimización de rendimiento aplicaste y por qué?
 
-- **Signals en lugar de RxJS**: `signal()` y `computed()` ofrecen reactividad granular sin suscripciones manuales. Las señales computadas (`pendingCount`, `completedCount`) solo se recalculan cuando la señal fuente cambia.
+- **Signals + computed() memoizados**: `filteredPendingTasks` y `filteredCategories` combinan búsqueda por texto y filtro por categoría en una sola señal computada que solo se recalcula si cambian sus dependencias. La búsqueda tiene **debounce de 300ms** para evitar recálculos mientras el usuario escribe.
+
+- **Buscador por texto en tareas y categorías**: Filtrado O(n) sobre arrays en memoria con `computed()`, respuesta instantánea incluso con cientos de registros. Sin llamadas a servidor ni índices externos.
 
 - **OnPush change detection**: Solo se re-renderiza el componente cuando una señal leída en el template cambia, eliminando ciclos innecesarios.
 
-- **Lazy Loading**: Los módulos de features se cargan bajo demanda, reduciendo el bundle inicial y el tiempo de arranque.
+- **Lazy Loading + PreloadAllModules**: Los módulos de features se cargan bajo demanda (bundle inicial de solo **197 kB**), pero se precargan en segundo plano tras el primer render.
 
-- **Persistencia fire-and-forget**: Las escrituras a Ionic Storage se disparan sin `await`, evitando bloquear el hilo principal.
+- **Persistencia fire-and-forget**: Las escrituras a Ionic Storage se disparan sin `await`, evitando bloquear el hilo principal. Ionic Storage usa SQLite/IndexedDB, asíncrono y no bloqueante.
 
-- **Ionic Storage con SQLite/IndexedDB**: Operaciones asíncronas no bloqueantes, a diferencia de `localStorage` que es síncrono y limitado a 5 MB.
+- **SSE en lugar de polling para Remote Config**: `onConfigUpdate` mantiene una conexión Server-Sent Events que no consume batería ni datos en segundo plano. Firebase notifica cambios al instante, sin peticiones HTTP repetidas.
+
+- **Angular Animations con triggers**: Las tareas entran/salen con fade + slide, y la sección de completadas usa fade in/out, todo manejado por el motor nativo de animaciones de Angular (sin librerías extra).
+
+- **Pull-to-refresh**: Gesto nativo que fuerza una recarga inmediata de los feature flags sin esperar al listener SSE.
 
 ### 3. ¿Cómo aseguraste la calidad y mantenibilidad del código?
 
@@ -41,6 +47,8 @@ Aplicación híbrida de lista de tareas construida con **Ionic 8 + Angular 20 + 
 - **Reactive Forms con validación**: Previene datos inválidos antes de llegar al modelo.
 
 - **40 tests unitarios**: Cubriendo lógica de negocio (casos borde, IDs inválidos, trim), persistencia (corruptos, sin init), formularios (validación, crear vs editar) y orquestación (flujos CRUD completos con confirmaciones).
+
+- **JSDoc completo (47 comentarios)**: Todas las clases, métodos públicos, propiedades inyectadas y señales tienen `@param`, `@returns` y descripción de su propósito en español.
 
 - **ESLint 0 errores**: Siguiendo guía de estilo Angular (`prefer-inject`, `use-lifecycle-interface`).
 
@@ -120,22 +128,23 @@ src/app/
 - [x] CRUD completo de categorías: crear, editar, eliminar
 - [x] Asignación de categoría a tareas desde el formulario
 - [x] Filtro de tareas por categoría con chips interactivos
+- [x] Buscador por texto en tareas (título + descripción) con debounce de 300ms
+- [x] Buscador por texto en categorías (nombre) con debounce de 300ms
 - [x] Formularios reactivos con validación (título requerido, mínimo 3 caracteres)
 - [x] Secciones Pendientes / Completadas con estados vacíos por sección
-- [x] Botones de acción visibles: completar ✓, editar ✏️, eliminar 🗑️
+- [x] Botones de acción con feature flags: completar ✓, editar ✏️, eliminar 🗑️, crear +
 - [x] Confirmaciones vía AlertController antes de completar o eliminar
 - [x] Regla de negocio: tarea completada no se edita ni se elimina
 - [x] Metadata visible: ID abreviado + fecha de creación/completado
 - [x] Modal centrado vía ModalController para crear/editar
 - [x] Menú lateral (`ion-menu`) con navegación entre Tareas y Categorías
-- [x] Firebase Remote Config con 4 feature flags
-- [x] Optimización con `ChangeDetectionStrategy.OnPush` + Signals + Lazy Loading
-- [x] 40 tests unitarios + lint 0 errores
-
-### Pendiente
-
-- [ ] Configurar Firebase Console con credenciales reales en `environment.ts`
-- [ ] Exportar APK e IPA
+- [x] Firebase Remote Config con 5 feature flags + listener en tiempo real (SSE)
+- [x] Transiciones animadas (fade + slide) al crear, completar y eliminar tareas
+- [x] Pull-to-refresh para forzar recarga de feature flags
+- [x] `ChangeDetectionStrategy.OnPush` + Signals + `computed()` memoizados
+- [x] Lazy Loading + PreloadAllModules (bundle inicial: 197 kB)
+- [x] 40 tests unitarios + ESLint 0 errores
+- [x] 47 JSDoc documentando todas las clases, métodos y propiedades
 
 ---
 
@@ -146,6 +155,8 @@ src/app/
 - Node.js 18+
 - npm 9+
 - Angular CLI 20 (`npm install -g @angular/cli`)
+- Android Studio (para APK)
+- Xcode (para IPA, solo macOS)
 
 ```bash
 npm install      # Instalar dependencias
@@ -158,10 +169,27 @@ npm run lint     # Ejecutar ESLint
 
 ## Compilación para Android e iOS
 
+> Las carpetas `android/` e `ios/` **no se versionan** en el repositorio.
+> Se regeneran con los comandos de abajo y contienen los proyectos nativos
+> (Android Studio / Xcode).
+
+### Generar las plataformas nativas (solo la primera vez)
+
+```bash
+npx cap add android    # Genera la carpeta android/
+npx cap add ios        # Genera la carpeta ios/
+```
+
+### Flujo completo de compilación
+
+```bash
+npm run build -- --configuration production   # Build web
+npx cap sync                                   # Copia el build a las plataformas
+```
+
 ### Android (APK)
 
 ```bash
-npx cap sync android
 npx cap open android
 ```
 
@@ -170,7 +198,6 @@ En Android Studio: `Build > Build Bundle(s) / APK(s) > Build APK(s)`
 ### iOS (IPA — solo macOS)
 
 ```bash
-npx cap sync ios
 npx cap open ios
 ```
 
@@ -185,21 +212,31 @@ En Xcode: `Product > Archive`
 ### Configuración
 
 1. Crear proyecto en [Firebase Console](https://console.firebase.google.com)
-2. Agregar app web y copiar la configuración a `src/environments/environment.ts`
-3. En Remote Config, crear los siguientes parámetros booleanos:
+2. Agregar app **web** (`</>`) y copiar la configuración a `src/environments/environment.ts` y `src/environments/environment.prod.ts`
+3. En **Remote Config** (menú lateral → DevOps y participación), crear los siguientes parámetros booleanos:
 
 | Parámetro | Default | Efecto cuando `false` |
 |---|---|---|
-| `enable_create` | `true` | Oculta el botón FAB (+) |
-| `enable_edit` | `true` | Oculta botón ✏️ en tarjetas |
-| `enable_delete` | `true` | Oculta botón 🗑️ en tarjetas |
-| `enable_categories` | `true` | Oculta Categorías del menú y filtro |
+| `enable_create` | `true` | Oculta el botón FAB (+) en tareas y categorías |
+| `enable_edit` | `true` | Oculta botón ✏️ en tareas y categorías |
+| `enable_delete` | `true` | Oculta botón 🗑️ en tareas y categorías |
+| `enable_complete` | `true` | Oculta botón ✓ de completar en tareas |
+| `enable_categories` | `true` | Oculta la sección Categorías del menú lateral y filtro |
+
+### Listener en tiempo real (SSE)
+
+La app usa `onConfigUpdate` (Server-Sent Events) en lugar de polling:
+
+- Firebase **notifica al instante** cuando publicás un cambio en la consola
+- **Cero consumo** de batería y datos en segundo plano
+- Sin riesgo de throttling por peticiones repetidas
+- Fallback: si SSE no está disponible, cache de 12 horas
 
 ### Demo del feature flag
 
 1. Publicar los parámetros con todos en `true`
 2. Abrir la app → todos los botones y secciones visibles
-3. Cambiar `enable_delete` a `false` en Firebase Console → publicar
-4. Reiniciar la app → botón 🗑️ desaparece sin recompilar
+3. Cambiar `enable_delete` a `false` en Firebase Console → **Publicar cambios**
+4. La app recibe la notificación por SSE y el botón 🗑️ desaparece **al instante**, sin reiniciar
 
 ---

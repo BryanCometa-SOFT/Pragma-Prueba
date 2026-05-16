@@ -41,6 +41,12 @@ export class TaskService {
   /** Señal computada: total de tareas completadas */
   readonly completedCount = computed(() => this.tasks().filter((t) => t.completed).length);
 
+  /** Señal computada: array de tareas pendientes (no completadas) */
+  readonly pendingTasks = computed(() => this.tasks().filter((t) => !t.completed));
+
+  /** Señal computada: array de tareas completadas */
+  readonly completedTasks = computed(() => this.tasks().filter((t) => t.completed));
+
   private storage = inject(StorageService);
 
   /**
