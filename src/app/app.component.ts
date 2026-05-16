@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { RemoteConfigService } from './core/services/remote-config.service';
 
 @Component({
   selector: 'app-root',
@@ -7,11 +8,5 @@ import { Component } from '@angular/core';
   standalone: false,
 })
 export class AppComponent {
-  /**
-   * AppComponent actúa únicamente como shell de la aplicación.
-   * No contiene lógica de negocio: la inicialización de datos se realiza
-   * vía APP_INITIALIZER en AppModule, y el contenido se delega al
-   * ion-router-outlet mediante lazy loading de feature modules.
-   */
-  constructor() {}
+  remoteConfig = inject(RemoteConfigService);
 }

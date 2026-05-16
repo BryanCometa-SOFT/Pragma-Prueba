@@ -68,3 +68,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+.agents
+skills-lock.json
+
+environments/environment.prod.ts

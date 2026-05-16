@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AlertController, ModalController } from '@ionic/angular';
 import { TaskService } from '../../core/services/task.service';
 import { CategoryService } from '../../core/services/category.service';
+import { RemoteConfigService } from '../../core/services/remote-config.service';
 import { Task } from '../../core/models/task.model';
 import { TaskFormComponent } from './components/task-form/task-form.component';
 
@@ -10,14 +11,15 @@ import { TaskFormComponent } from './components/task-form/task-form.component';
   templateUrl: 'tasks.page.html',
   styleUrls: ['tasks.page.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TasksPage {
   showCompleted = signal(false);
-  /** ID de la categoría seleccionada para filtrar. null = mostrar todas */
   selectedCategoryId = signal<string | null>(null);
 
   taskService = inject(TaskService);
   categoryService = inject(CategoryService);
+  remoteConfig = inject(RemoteConfigService);
   private modalController = inject(ModalController);
   private alertController = inject(AlertController);
 

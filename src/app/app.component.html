@@ -13,12 +13,14 @@
             <ion-label>Tareas</ion-label>
           </ion-item>
         </ion-menu-toggle>
+        @if (remoteConfig.enableCategories()) {
         <ion-menu-toggle auto-hide="false">
           <ion-item button routerLink="/categories" routerDirection="root" lines="none" detail="false">
             <ion-icon slot="start" name="pricetags-outline"></ion-icon>
             <ion-label>Categorías</ion-label>
           </ion-item>
         </ion-menu-toggle>
+        }
       </ion-list>
     </ion-content>
   </ion-menu>

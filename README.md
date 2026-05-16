@@ -4,6 +4,48 @@ Aplicación híbrida de lista de tareas construida con **Ionic 8 + Angular 20 + 
 
 ---
 
+## Preguntas de la prueba
+
+### 1. ¿Cuáles fueron los principales desafíos que enfrentaste al implementar las nuevas funcionalidades?
+
+- **Decisión de arquitectura**: Elegir entre una estructura plana o modular (`core/` + `features/`). Opté por la modular porque demuestra preparación para proyectos enterprise sin caer en sobre-ingeniería para una app de este tamaño.
+
+- **Ionic Storage como capa de persistencia**: Configurar correctamente la inicialización asíncrona con `APP_INITIALIZER` para que los datos estuvieran disponibles antes del primer render.
+
+- **Manejo de fechas en serialización JSON**: Ionic Storage serializa a string. Implementé deserialización a `Date` en `TaskService.init()` para mantener la integridad de tipos.
+
+- **Separación de responsabilidades**: Extraer `TaskFormComponent` y `CategoryFormComponent` como componentes independientes comunicados vía `ModalController.dismiss()`, manteniendo las páginas ligeras y enfocadas.
+
+### 2. ¿Qué técnicas de optimización de rendimiento aplicaste y por qué?
+
+- **Signals en lugar de RxJS**: `signal()` y `computed()` ofrecen reactividad granular sin suscripciones manuales. Las señales computadas (`pendingCount`, `completedCount`) solo se recalculan cuando la señal fuente cambia.
+
+- **OnPush change detection**: Solo se re-renderiza el componente cuando una señal leída en el template cambia, eliminando ciclos innecesarios.
+
+- **Lazy Loading**: Los módulos de features se cargan bajo demanda, reduciendo el bundle inicial y el tiempo de arranque.
+
+- **Persistencia fire-and-forget**: Las escrituras a Ionic Storage se disparan sin `await`, evitando bloquear el hilo principal.
+
+- **Ionic Storage con SQLite/IndexedDB**: Operaciones asíncronas no bloqueantes, a diferencia de `localStorage` que es síncrono y limitado a 5 MB.
+
+### 3. ¿Cómo aseguraste la calidad y mantenibilidad del código?
+
+- **Código en inglés, documentación en español**: Convención clara y consistente.
+
+- **Comentarios en español**: Cada clase, método y parámetro documenta su propósito y comportamiento.
+
+- **Separación de responsabilidades**: Capa de infraestructura (`StorageService`), capa de negocio (`TaskService`, `CategoryService`), capa de presentación (páginas + componentes de formulario).
+
+- **Mismo patrón en features replicables**: `TasksPage` y `CategoriesPage` siguen exactamente la misma estructura, facilitando el onboarding de nuevos desarrolladores.
+
+- **Reactive Forms con validación**: Previene datos inválidos antes de llegar al modelo.
+
+- **40 tests unitarios**: Cubriendo lógica de negocio (casos borde, IDs inválidos, trim), persistencia (corruptos, sin init), formularios (validación, crear vs editar) y orquestación (flujos CRUD completos con confirmaciones).
+
+- **ESLint 0 errores**: Siguiendo guía de estilo Angular (`prefer-inject`, `use-lifecycle-interface`).
+
+---
+
 ## Stack tecnológico
 
 | Capa | Tecnología |
@@ -12,8 +54,9 @@ Aplicación híbrida de lista de tareas construida con **Ionic 8 + Angular 20 + 
 | Frontend | Angular 20 (NgModule, Signals) |
 | Mobile runtime | Capacitor 8 |
 | Persistencia local | Ionic Storage (SQLite en iOS/Android, IndexedDB en Web) |
+| Feature flags | Firebase Remote Config |
 | Formularios | Reactive Forms + Validators |
-| Testing | Karma + Jasmine |
+| Testing | Karma + Jasmine (40 tests) |
 | Linting | ESLint (angular-eslint) |
 
 ---
@@ -29,7 +72,8 @@ src/app/
 │   └── services/
 │       ├── storage.service.ts     # Fachada sobre Ionic Storage (SQLite/IndexedDB)
 │       ├── task.service.ts        # Lógica de negocio de tareas con Signals
-│       └── category.service.ts    # Lógica de negocio de categorías con Signals
+│       ├── category.service.ts    # Lógica de negocio de categorías con Signals
+│       └── remote-config.service.ts  # Firebase Remote Config (feature flags)
 │
 ├── features/                      # Módulos lazy-loaded
 │   ├── tasks/                     # Feature de gestión de tareas
@@ -37,15 +81,13 @@ src/app/
 │   │   │   └── task-form/         # Componente de formulario (modal crear/editar)
 │   │   ├── tasks.page.ts          # Lista con filtro por categoría
 │   │   ├── tasks.page.html
-│   │   ├── tasks.page.scss
 │   │   └── tasks.module.ts
 │   │
 │   └── categories/                # Feature de gestión de categorías
 │       ├── components/
-│       │   └── category-form/     # Formulario con selector de color e ícono
+│       │   └── category-form/     # Formulario con selector de ícono
 │       ├── categories.page.ts
 │       ├── categories.page.html
-│       ├── categories.page.scss
 │       └── categories.module.ts
 │
 ├── shared/                        # Componentes reutilizables
@@ -53,44 +95,47 @@ src/app/
 │
 ├── app.module.ts                  # APP_INITIALIZER + IonicStorageModule
 ├── app-routing.module.ts          # Lazy loading de features
-└── app.component.ts               # Shell de la aplicación
+└── app.component.ts               # Shell con ion-menu lateral
 ```
 
 ### Patrones de diseño empleados
 
 | Patrón | Dónde | Propósito |
 |---|---|---|
-| **Singleton** | `StorageService`, `TaskService` (`providedIn: 'root'`) | Única instancia compartida en toda la app |
-| **Fachada (Facade)** | `StorageService` | Oculta la complejidad de Ionic Storage tras `get/set/remove` |
-| **Dependency Injection** | Vía `inject()` en toda la app | Desacoplamiento total entre capas |
-| **Lazy Loading** | `features/tasks/` | Carga bajo demanda del módulo de tareas |
+| **Singleton** | Servicios (`providedIn: 'root'`) | Única instancia compartida en toda la app |
+
+| **Fachada (Facade)** | `StorageService` | Oculta complejidad de Ionic Storage tras `get/set/remove` |
+
+| **Dependency Injection** | `inject()` en toda la app | Desacoplamiento total entre capas |
+
+| **Lazy Loading** | `features/tasks/`, `features/categories/` | Carga bajo demanda de cada módulo |
+
 | **APP_INITIALIZER** | `app.module.ts` | Inicialización asíncrona de datos antes del primer render |
 
 ---
 
-## Funcionalidades implementadas (Etapa 1 + 2 — Base + Categorías)
+## Funcionalidades implementadas
 
-- [x] Arquitectura modular `core/` + `features/`
-- [x] Persistencia local con Ionic Storage (SQLite/IndexedDB)
 - [x] CRUD completo de tareas: crear, editar, completar, eliminar
 - [x] CRUD completo de categorías: crear, editar, eliminar
 - [x] Asignación de categoría a tareas desde el formulario
 - [x] Filtro de tareas por categoría con chips interactivos
 - [x] Formularios reactivos con validación (título requerido, mínimo 3 caracteres)
-- [x] Secciones Pendientes / Completadas con estados vacíos
-- [x] Botones de acción visibles: completar, editar, eliminar
+- [x] Secciones Pendientes / Completadas con estados vacíos por sección
+- [x] Botones de acción visibles: completar ✓, editar ✏️, eliminar 🗑️
 - [x] Confirmaciones vía AlertController antes de completar o eliminar
 - [x] Regla de negocio: tarea completada no se edita ni se elimina
-- [x] Metadata visible por tarea: ID abreviado + fecha de creación/completado
+- [x] Metadata visible: ID abreviado + fecha de creación/completado
 - [x] Modal centrado vía ModalController para crear/editar
-- [x] Selector de color e ícono en formulario de categorías
-- [x] 29 tests unitarios + lint 0 errores
+- [x] Menú lateral (`ion-menu`) con navegación entre Tareas y Categorías
+- [x] Firebase Remote Config con 4 feature flags
+- [x] Optimización con `ChangeDetectionStrategy.OnPush` + Signals + Lazy Loading
+- [x] 40 tests unitarios + lint 0 errores
 
-### Pendiente por implementar
+### Pendiente
 
-- [ ] Firebase + Remote Config: feature flag para funcionalidad específica
-- [ ] Optimización de rendimiento (OnPush, trackBy, virtual scroll)
-- [ ] Exportación de APK e IPA
+- [ ] Configurar Firebase Console con credenciales reales en `environment.ts`
+- [ ] Exportar APK e IPA
 
 ---
 
@@ -100,50 +145,23 @@ src/app/
 
 - Node.js 18+
 - npm 9+
-- Angular CLI 21 (`npm install -g @angular/cli`)
-
-### Instalar dependencias
+- Angular CLI 20 (`npm install -g @angular/cli`)
 
 ```bash
-npm install
-```
-
-### Ejecutar en el navegador (desarrollo)
-
-```bash
-npm start
-```
-
-Abre `http://localhost:4200` en el navegador.
-
-### Ejecutar tests
-
-```bash
-npm test
-```
-
-### Ejecutar lint
-
-```bash
-npm run lint
+npm install      # Instalar dependencias
+npm start        # Ejecutar en http://localhost:4200
+npm test         # Ejecutar 40 tests unitarios
+npm run lint     # Ejecutar ESLint
 ```
 
 ---
 
 ## Compilación para Android e iOS
 
-### Requisitos adicionales
-
-- **Android**: Android Studio + SDK de Android
-- **iOS**: macOS + Xcode (obligatorio para generar IPA)
-
 ### Android (APK)
 
 ```bash
-# Sincronizar proyecto con Capacitor
 npx cap sync android
-
-# Abrir en Android Studio y compilar
 npx cap open android
 ```
 
@@ -152,60 +170,36 @@ En Android Studio: `Build > Build Bundle(s) / APK(s) > Build APK(s)`
 ### iOS (IPA — solo macOS)
 
 ```bash
-# Sincronizar proyecto con Capacitor
 npx cap sync ios
-
-# Abrir en Xcode y compilar
 npx cap open ios
 ```
 
-En Xcode: seleccionar dispositivo/simulador > `Product > Archive`
+En Xcode: `Product > Archive`
 
-> **Nota**: Si no disponés de macOS, alternativas para generar IPA:
-> - [AppFlow](https://ionic.io/appflow) (servicio cloud de Ionic)
-> - [CodeMagic](https://codemagic.io/) (CI/CD para apps móviles)
-> - [MacStadium](https://www.macstadium.com/) (Mac en la nube)
+> Si no disponés de macOS: [AppFlow](https://ionic.io/appflow), [CodeMagic](https://codemagic.io/) o [MacStadium](https://www.macstadium.com/).
 
 ---
 
-## Preguntas de la prueba
+## Firebase Remote Config
 
-### 1. ¿Cuáles fueron los principales desafíos?
+### Configuración
 
-- **Separación de responsabilidades**: Decidir la estructura de carpetas (`core/` + `features/`) que fuera suficientemente escalable sin caer en sobre-ingeniería para una app de este tamaño.
-- **Ionic Storage como capa de persistencia**: Configurar correctamente la inicialización asíncrona con `APP_INITIALIZER` para que los datos estuvieran disponibles antes del primer render, evitando lógica en constructores.
-- **Manejo de fechas en serialización JSON**: Las fechas se convierten a string al guardar en Ionic Storage, por lo que fue necesario deserializarlas a `Date` al cargar los datos.
-- **Separar el formulario de la página principal**: Extraer `TaskFormComponent` y comunicarlo vía `ModalController.dismiss()` mantuvo las responsabilidades claras y el código testeable.
+1. Crear proyecto en [Firebase Console](https://console.firebase.google.com)
+2. Agregar app web y copiar la configuración a `src/environments/environment.ts`
+3. En Remote Config, crear los siguientes parámetros booleanos:
 
-### 2. ¿Qué técnicas de optimización de rendimiento aplicaste?
+| Parámetro | Default | Efecto cuando `false` |
+|---|---|---|
+| `enable_create` | `true` | Oculta el botón FAB (+) |
+| `enable_edit` | `true` | Oculta botón ✏️ en tarjetas |
+| `enable_delete` | `true` | Oculta botón 🗑️ en tarjetas |
+| `enable_categories` | `true` | Oculta Categorías del menú y filtro |
 
-- **Signals en lugar de RxJS**: Uso de `signal()` y `computed()` para reactividad granular. Las señales computadas (`pendingCount`, `completedCount`) solo se recalculan cuando `tasks` cambia.
-- **Lazy Loading**: El módulo `TasksPageModule` se carga bajo demanda, reduciendo el bundle inicial.
-- **APP_INITIALIZER**: Los datos se cargan antes del render, eliminando flickers o spinners innecesarios al iniciar.
-- **Persistencia fire-and-forget**: Las escrituras a Ionic Storage se disparan sin `await`, evitando bloquear la UI mientras se persiste.
-- **Ionic Storage con SQLite/IndexedDB**: Operaciones asíncronas no bloqueantes, a diferencia de `localStorage` que es síncrono.
+### Demo del feature flag
 
-### 3. ¿Cómo aseguraste la calidad y mantenibilidad del código?
-
-- **Comentarios en español** documentando propósito y comportamiento de cada clase, método y parámetro.
-- **Separación de responsabilidades**: `StorageService` (infraestructura), `TaskService` (negocio), `TasksPage` (orquestación), `TaskFormComponent` (formulario).
-- **Reactive Forms con validación**: Previene datos inválidos en el modelo.
-- **29 tests unitarios** cubriendo lógica de negocio, persistencia, formularios y flujos de CRUD.
-- **ESLint 0 errores** siguiendo la guía de estilo de Angular (`prefer-inject`, `use-lifecycle-interface`).
-- **Código en inglés, documentación en español**: Convenciones claras para variables/servicios vs comentarios.
+1. Publicar los parámetros con todos en `true`
+2. Abrir la app → todos los botones y secciones visibles
+3. Cambiar `enable_delete` a `false` en Firebase Console → publicar
+4. Reiniciar la app → botón 🗑️ desaparece sin recompilar
 
 ---
-
-## Historial de commits
-
-| Commit | Descripción |
-|---|---|
-| `Initial commit` | Template base de Ionic Angular (blank starter) |
-| *Paso 1+2* | feat: arquitectura base, Ionic Storage y CRUD de tareas |
-| *Paso 3* | feat: categorías con CRUD, asignación a tareas y filtro |
-
----
-
-## Autor
-
-Desarrollado por Bryan Cometa como parte de una prueba técnica para Pragma.

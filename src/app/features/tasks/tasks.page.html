@@ -10,7 +10,7 @@
 <ion-content class="ion-padding">
 
   <!-- ==================== FILTRO POR CATEGORÍA ==================== -->
-  @if (categoryService.categories().length > 0) {
+  @if (remoteConfig.enableCategories() && categoryService.categories().length > 0) {
     <div class="category-filter">
       <ion-chip
         [outline]="selectedCategoryId() !== null"
@@ -72,12 +72,16 @@
             <ion-button slot="end" fill="clear" size="small" (click)="confirmComplete(task)">
               <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
             </ion-button>
-            <ion-button slot="end" fill="clear" size="small" (click)="openEditModal(task)">
-              <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
-            </ion-button>
-            <ion-button slot="end" fill="clear" size="small" color="danger" (click)="confirmDelete(task)">
-              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-            </ion-button>
+            @if (remoteConfig.enableEdit()) {
+              <ion-button slot="end" fill="clear" size="small" (click)="openEditModal(task)">
+                <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+              </ion-button>
+            }
+            @if (remoteConfig.enableDelete()) {
+              <ion-button slot="end" fill="clear" size="small" color="danger" (click)="confirmDelete(task)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            }
           </ion-item>
 
         }
@@ -155,10 +159,12 @@
   }
 
   <!-- ==================== FAB ==================== -->
+  @if (remoteConfig.enableCreate()) {
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click)="openAddModal()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+  }
 
 </ion-content>

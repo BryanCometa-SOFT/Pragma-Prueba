@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { AlertController, ModalController } from '@ionic/angular';
 import { CategoryService } from '../../core/services/category.service';
 import { Category } from '../../core/models/category.model';
@@ -13,6 +13,7 @@ import { CategoryFormComponent } from './components/category-form/category-form.
   templateUrl: 'categories.page.html',
   styleUrls: ['categories.page.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CategoriesPage {
   categoryService = inject(CategoryService);

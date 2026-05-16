@@ -9,26 +9,26 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { TaskService } from './core/services/task.service';
 import { CategoryService } from './core/services/category.service';
+import { RemoteConfigService } from './core/services/remote-config.service';
 import { StorageService } from './core/services/storage.service';
 
 /**
- * Factory function para APP_INITIALIZER.
- *
- * Orquesta la inicialización asíncrona de los servicios de persistencia:
- * 1. Inicializa el motor de Ionic Storage (SQLite/IndexedDB).
- * 2. Carga los datos de tareas y categorías desde el almacenamiento local.
- *
- * Se ejecuta antes del primer render, garantizando datos disponibles.
+ * Orquesta la inicialización asíncrona de todos los servicios:
+ * 1. Ionic Storage (SQLite/IndexedDB)
+ * 2. Datos locales (tareas y categorías)
+ * 3. Firebase Remote Config (feature flags)
  */
 function initializeApp(
   storageService: StorageService,
   taskService: TaskService,
   categoryService: CategoryService,
+  remoteConfigService: RemoteConfigService,
 ): () => Promise<void> {
   return async () => {
     await storageService.init();
     await taskService.init();
     await categoryService.init();
+    await remoteConfigService.init();
   };
 }
 
@@ -45,7 +45,7 @@ function initializeApp(
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
-      deps: [StorageService, TaskService, CategoryService],
+      deps: [StorageService, TaskService, CategoryService, RemoteConfigService],
       multi: true,
     },
   ],
