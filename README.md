@@ -263,10 +263,12 @@ En Xcode: `Product > Archive`
 
 ## Firebase Remote Config
 
+> **Importante**: Las credenciales de Firebase **no están incluidas** en este repositorio público por seguridad. Si se expusieran, cualquier persona podría consumir recursos de mi proyecto (costos, cuotas de uso, throttling). Quien evalúe esta prueba debe crear su propio proyecto en Firebase Console y configurar las credenciales.
+
 ### Configuración
 
 1. Crear proyecto en [Firebase Console](https://console.firebase.google.com)
-2. Agregar app **web** (`</>`) y copiar la configuración a `src/environments/environment.ts` y `src/environments/environment.prod.ts`
+2. Agregar app **web** (`</>`), copiar el objeto `firebaseConfig` y pegarlo en `src/environments/environment.ts` (desarrollo) y `src/environments/environment.prod.ts` (producción). Ambos archivos están en `.gitignore`.
 3. En **Remote Config** (menú lateral → DevOps y participación), crear los siguientes parámetros booleanos:
 
 | Parámetro | Default | Efecto cuando `false` |
