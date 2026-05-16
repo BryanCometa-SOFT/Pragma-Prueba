@@ -1,20 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { AlertController, ModalController } from '@ionic/angular';
 import { TaskService } from '../../core/services/task.service';
+import { CategoryService } from '../../core/services/category.service';
 import { Task } from '../../core/models/task.model';
 import { TaskFormComponent } from './components/task-form/task-form.component';
 
-/**
- * Página de gestión de tareas.
- *
- * Responsabilidades:
- * - Renderizar la lista de tareas con secciones Pendientes / Completadas.
- * - Orquestar la creación y edición de tareas a través de TaskFormComponent (modal).
- * - Manejar confirmaciones de eliminación y completado vía AlertController.
- *
- * La lógica del formulario está delegada a TaskFormComponent
- * para mantener esta página ligera y enfocada en la lista.
- */
 @Component({
   selector: 'app-tasks',
   templateUrl: 'tasks.page.html',
@@ -23,14 +13,16 @@ import { TaskFormComponent } from './components/task-form/task-form.component';
 })
 export class TasksPage {
   showCompleted = signal(false);
+  /** ID de la categoría seleccionada para filtrar. null = mostrar todas */
+  selectedCategoryId = signal<string | null>(null);
 
   taskService = inject(TaskService);
+  categoryService = inject(CategoryService);
   private modalController = inject(ModalController);
   private alertController = inject(AlertController);
 
-  /* ==================== MODAL: CREAR / EDITAR ==================== */
+  /* ==================== MODAL CREAR / EDITAR ==================== */
 
-  /** Abre el modal en modo creación. */
   async openAddModal(): Promise<void> {
     const modal = await this.modalController.create({
       component: TaskFormComponent,
@@ -39,11 +31,10 @@ export class TasksPage {
     await modal.present();
     const { data } = await modal.onDidDismiss();
     if (data) {
-      this.taskService.add(data.title, data.description);
+      this.taskService.add(data.title, data.description, data.categoryId);
     }
   }
 
-  /** Abre el modal en modo edición con los datos de la tarea. */
   async openEditModal(task: Task): Promise<void> {
     if (task.completed) return;
     const modal = await this.modalController.create({
@@ -56,6 +47,7 @@ export class TasksPage {
       this.taskService.update(task.id, {
         title: data.title,
         description: data.description,
+        categoryId: data.categoryId,
       });
     }
   }
@@ -66,7 +58,7 @@ export class TasksPage {
     if (task.completed) return;
     const alert = await this.alertController.create({
       header: '¿Completar tarea?',
-      message: `"${task.title}" se marcará como finalizada. No podrás editarla después.`,
+      message: `"${task.title}" se marcará como finalizada.`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         { text: 'Completar', handler: () => { this.taskService.toggleComplete(task.id); } },
@@ -82,11 +74,8 @@ export class TasksPage {
       message: `"${task.title}" se eliminará permanentemente.`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Eliminar',
-          role: 'destructive',
-          handler: () => { this.taskService.delete(task.id); },
-        },
+        { text: 'Eliminar', role: 'destructive',
+          handler: () => { this.taskService.delete(task.id); } },
       ],
     });
     await alert.present();
@@ -94,12 +83,21 @@ export class TasksPage {
 
   /* ==================== FILTROS ==================== */
 
-  pendingTasks(): Task[] {
-    return this.taskService.tasks().filter((t) => !t.completed);
+  /** Tareas filtradas por categoría y estado pendiente */
+  filteredPendingTasks(): Task[] {
+    let tasks = this.taskService.tasks().filter((t) => !t.completed);
+    const catId = this.selectedCategoryId();
+    if (catId) tasks = tasks.filter((t) => t.categoryId === catId);
+    return tasks;
   }
 
   completedTasks(): Task[] {
     return this.taskService.tasks().filter((t) => t.completed);
+  }
+
+  /** Retorna la categoría dado su ID (para mostrar nombre en chips) */
+  getCategory(id: string) {
+    return this.categoryService.getById(id);
   }
 
   /* ==================== FORMATO ==================== */
@@ -113,7 +111,5 @@ export class TasksPage {
     });
   }
 
-  formatId(id: string): string {
-    return '#' + id.substring(0, 8);
-  }
+  formatId(id: string): string { return '#' + id.substring(0, 8); }
 }

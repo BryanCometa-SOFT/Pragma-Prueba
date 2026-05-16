@@ -1,0 +1,46 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Categorías</ion-title>
+    <ion-badge slot="end" color="primary">{{ categoryService.count() }}</ion-badge>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  @if (categoryService.categories().length === 0) {
+    <div class="empty-state">
+      <ion-icon name="pricetags-outline" class="empty-icon"></ion-icon>
+      <h2>No hay categorías</h2>
+      <p>Tocá <strong>+</strong> para crear la primera</p>
+    </div>
+  }
+
+  @if (categoryService.categories().length > 0) {
+    <ion-list lines="none">
+      @for (cat of categoryService.categories(); track cat.id) {
+        <ion-item class="cat-item">
+          <ion-icon slot="start" [name]="cat.icon" color="primary"></ion-icon>
+          <ion-label>
+            <h2>{{ cat.name }}</h2>
+          </ion-label>
+          <ion-button slot="end" fill="clear" size="small" (click)="openEditModal(cat)">
+            <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+          </ion-button>
+          <ion-button slot="end" fill="clear" size="small" color="danger" (click)="confirmDelete(cat)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      }
+    </ion-list>
+  }
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="openAddModal()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>

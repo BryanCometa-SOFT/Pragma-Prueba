@@ -1,8 +1,21 @@
 /*
  * Estilos de la página de tareas.
  * Solo contiene estilos que Ionic no maneja nativamente.
- * La mayoría del layout y componentes usan ion-* con sus estilos por defecto.
  */
+
+/* --- Filtro por categoría --- */
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0 12px;
+  overflow-x: auto;
+}
+
+.category-filter ion-chip {
+  flex-shrink: 0;
+  cursor: pointer;
+}
 
 /* --- Estado vacío --- */
 .empty-state {
@@ -31,6 +44,23 @@
   font-size: 14px;
   color: var(--ion-color-medium);
   margin: 0;
+}
+
+/* --- Categoría en tarjeta --- */
+.task-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+  font-size: 12px;
+  color: var(--ion-color-primary);
+}
+
+.task-category ion-icon {
+  font-size: 14px;
 }
 
 /* --- Encabezados de sección --- */

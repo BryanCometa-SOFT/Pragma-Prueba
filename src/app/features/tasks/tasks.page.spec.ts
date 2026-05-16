@@ -3,11 +3,13 @@ import { IonicModule, AlertController, ModalController } from '@ionic/angular';
 import { signal } from '@angular/core';
 import { TasksPage } from './tasks.page';
 import { TaskService } from '../../core/services/task.service';
+import { CategoryService } from '../../core/services/category.service';
 
 describe('TasksPage', () => {
   let component: TasksPage;
   let fixture: ComponentFixture<TasksPage>;
   let taskServiceMock: jasmine.SpyObj<TaskService>;
+  let categoryServiceMock: jasmine.SpyObj<CategoryService>;
   let modalControllerMock: jasmine.SpyObj<ModalController>;
   let alertControllerMock: jasmine.SpyObj<AlertController>;
 
@@ -15,6 +17,10 @@ describe('TasksPage', () => {
     taskServiceMock = jasmine.createSpyObj<TaskService>(
       'TaskService', ['add', 'update', 'toggleComplete', 'delete'],
       { tasks: signal([]), taskCount: signal(0), pendingCount: signal(0), completedCount: signal(0) },
+    );
+    categoryServiceMock = jasmine.createSpyObj<CategoryService>(
+      'CategoryService', ['getById'],
+      { categories: signal([]), count: signal(0) },
     );
     modalControllerMock = jasmine.createSpyObj<ModalController>('ModalController', ['create']);
     alertControllerMock = jasmine.createSpyObj<AlertController>('AlertController', ['create']);
@@ -24,6 +30,7 @@ describe('TasksPage', () => {
       imports: [IonicModule.forRoot()],
       providers: [
         { provide: TaskService, useValue: taskServiceMock },
+        { provide: CategoryService, useValue: categoryServiceMock },
         { provide: ModalController, useValue: modalControllerMock },
         { provide: AlertController, useValue: alertControllerMock },
       ],
@@ -41,11 +48,11 @@ describe('TasksPage', () => {
   it('debería crear tarea cuando el modal retorna datos', async () => {
     const modalMock = {
       present: jasmine.createSpy(),
-      onDidDismiss: () => Promise.resolve({ data: { title: 'Nueva', description: 'Desc' } }),
+      onDidDismiss: () => Promise.resolve({ data: { title: 'Nueva', description: 'Desc', categoryId: null } }),
     };
     modalControllerMock.create.and.resolveTo(modalMock as any);
     await component.openAddModal();
-    expect(taskServiceMock.add).toHaveBeenCalledWith('Nueva', 'Desc');
+    expect(taskServiceMock.add).toHaveBeenCalledWith('Nueva', 'Desc', null);
   });
 
   it('no debería crear tarea si el modal se cierra sin datos', async () => {
@@ -59,12 +66,12 @@ describe('TasksPage', () => {
   it('debería editar tarea cuando el modal de edición retorna datos', async () => {
     modalControllerMock.create.and.resolveTo({
       present: jasmine.createSpy(),
-      onDidDismiss: () => Promise.resolve({ data: { title: 'Editada', description: 'Nva' } }),
+      onDidDismiss: () => Promise.resolve({ data: { title: 'Editada', description: 'Nva', categoryId: null } }),
     } as any);
     const task = { id: 'abc', title: 'Vieja', description: '', completed: false,
       categoryId: null, createdAt: new Date(), completedAt: null };
     await component.openEditModal(task);
-    expect(taskServiceMock.update).toHaveBeenCalledWith('abc', { title: 'Editada', description: 'Nva' });
+    expect(taskServiceMock.update).toHaveBeenCalledWith('abc', { title: 'Editada', description: 'Nva', categoryId: null });
   });
 
   it('no debería abrir modal de edición si la tarea está completada', async () => {

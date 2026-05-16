@@ -11,13 +11,8 @@
   <form [formGroup]="taskForm" novalidate>
 
     <ion-item [class.ion-invalid]="title?.invalid && title?.touched">
-      <ion-input
-        formControlName="title"
-        label="Título"
-        labelPlacement="stacked"
-        placeholder="¿Qué necesitás hacer?"
-        [counter]="true"
-        maxlength="100">
+      <ion-input formControlName="title" label="Título" labelPlacement="stacked"
+                 placeholder="¿Qué necesitás hacer?" [counter]="true" maxlength="100">
       </ion-input>
     </ion-item>
     @if (title?.invalid && title?.touched) {
@@ -28,25 +23,29 @@
     }
 
     <ion-item>
-      <ion-textarea
-        formControlName="description"
-        label="Descripción"
-        labelPlacement="stacked"
-        placeholder="Agregá detalles o notas..."
-        [counter]="true"
-        maxlength="500"
-        [rows]="4">
+      <ion-textarea formControlName="description" label="Descripción" labelPlacement="stacked"
+                    placeholder="Agregá detalles o notas..." [counter]="true" maxlength="500" [rows]="4">
       </ion-textarea>
     </ion-item>
     @if (description?.invalid && description?.touched) {
       <ion-note color="danger" class="field-error">Máximo 500 caracteres</ion-note>
     }
 
-    <ion-button
-      expand="block"
-      class="submit-btn"
-      [disabled]="taskForm.invalid"
-      (click)="save()">
+    <!-- Selector de categoría -->
+    <ion-item>
+      <ion-select formControlName="categoryId" label="Categoría" labelPlacement="stacked"
+                  placeholder="Sin categoría" [cancelText]="'Quitar'">
+        <ion-select-option value="">Sin categoría</ion-select-option>
+        @for (cat of categoryService.categories(); track cat.id) {
+          <ion-select-option [value]="cat.id">
+            <ion-icon [name]="cat.icon" slot="start"></ion-icon>
+            {{ cat.name }}
+          </ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+
+    <ion-button expand="block" class="submit-btn" [disabled]="taskForm.invalid" (click)="save()">
       {{ isEditing ? 'Actualizar' : 'Guardar' }}
     </ion-button>
   </form>

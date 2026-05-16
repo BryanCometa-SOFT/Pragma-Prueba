@@ -8,23 +8,27 @@ import { IonicStorageModule } from '@ionic/storage-angular';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { TaskService } from './core/services/task.service';
+import { CategoryService } from './core/services/category.service';
 import { StorageService } from './core/services/storage.service';
 
 /**
  * Factory function para APP_INITIALIZER.
  *
- * Orquesta la inicialización de los servicios de persistencia:
+ * Orquesta la inicialización asíncrona de los servicios de persistencia:
  * 1. Inicializa el motor de Ionic Storage (SQLite/IndexedDB).
- * 2. Carga los datos de tareas desde el almacenamiento local.
+ * 2. Carga los datos de tareas y categorías desde el almacenamiento local.
  *
- * Ambas operaciones son asíncronas y se ejecutan antes de que Angular
- * renderice la aplicación, garantizando que los datos estén disponibles
- * desde el primer paint.
+ * Se ejecuta antes del primer render, garantizando datos disponibles.
  */
-function initializeApp(storageService: StorageService, taskService: TaskService): () => Promise<void> {
+function initializeApp(
+  storageService: StorageService,
+  taskService: TaskService,
+  categoryService: CategoryService,
+): () => Promise<void> {
   return async () => {
     await storageService.init();
     await taskService.init();
+    await categoryService.init();
   };
 }
 
@@ -41,7 +45,7 @@ function initializeApp(storageService: StorageService, taskService: TaskService)
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
-      deps: [StorageService, TaskService],
+      deps: [StorageService, TaskService, CategoryService],
       multi: true,
     },
   ],

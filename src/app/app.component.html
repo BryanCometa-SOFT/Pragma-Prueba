@@ -1,3 +1,27 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <ion-menu contentId="main-content" side="start">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Menú</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        <ion-menu-toggle auto-hide="false">
+          <ion-item button routerLink="/tasks" routerDirection="root" lines="none" detail="false">
+            <ion-icon slot="start" name="checkbox-outline"></ion-icon>
+            <ion-label>Tareas</ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+        <ion-menu-toggle auto-hide="false">
+          <ion-item button routerLink="/categories" routerDirection="root" lines="none" detail="false">
+            <ion-icon slot="start" name="pricetags-outline"></ion-icon>
+            <ion-label>Categorías</ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+      </ion-list>
+    </ion-content>
+  </ion-menu>
+
+  <ion-router-outlet id="main-content"></ion-router-outlet>
 </ion-app>

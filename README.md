@@ -24,22 +24,31 @@ Aplicación híbrida de lista de tareas construida con **Ionic 8 + Angular 20 + 
 src/app/
 ├── core/                          # Capa de infraestructura (singletons globales)
 │   ├── models/
-│   │   └── task.model.ts          # Interfaz Task
+│   │   ├── task.model.ts          # Interfaz Task
+│   │   └── category.model.ts      # Interfaz Category
 │   └── services/
 │       ├── storage.service.ts     # Fachada sobre Ionic Storage (SQLite/IndexedDB)
-│       └── task.service.ts        # Lógica de negocio con Signals
+│       ├── task.service.ts        # Lógica de negocio de tareas con Signals
+│       └── category.service.ts    # Lógica de negocio de categorías con Signals
 │
 ├── features/                      # Módulos lazy-loaded
-│   └── tasks/                     # Feature de gestión de tareas
+│   ├── tasks/                     # Feature de gestión de tareas
+│   │   ├── components/
+│   │   │   └── task-form/         # Componente de formulario (modal crear/editar)
+│   │   ├── tasks.page.ts          # Lista con filtro por categoría
+│   │   ├── tasks.page.html
+│   │   ├── tasks.page.scss
+│   │   └── tasks.module.ts
+│   │
+│   └── categories/                # Feature de gestión de categorías
 │       ├── components/
-│       │   └── task-form/         # Componente de formulario (modal crear/editar)
-│       ├── tasks.page.ts          # Página principal de la lista
-│       ├── tasks.page.html        # Template con secciones Pendientes/Completadas
-│       ├── tasks.page.scss
-│       ├── tasks.module.ts
-│       └── tasks-routing.module.ts
+│       │   └── category-form/     # Formulario con selector de color e ícono
+│       ├── categories.page.ts
+│       ├── categories.page.html
+│       ├── categories.page.scss
+│       └── categories.module.ts
 │
-├── shared/                        # Componentes reutilizables (vacío por ahora)
+├── shared/                        # Componentes reutilizables
 │   └── components/
 │
 ├── app.module.ts                  # APP_INITIALIZER + IonicStorageModule
@@ -59,11 +68,14 @@ src/app/
 
 ---
 
-## Funcionalidades implementadas (Etapa 1 — Base To-Do List)
+## Funcionalidades implementadas (Etapa 1 + 2 — Base + Categorías)
 
 - [x] Arquitectura modular `core/` + `features/`
 - [x] Persistencia local con Ionic Storage (SQLite/IndexedDB)
 - [x] CRUD completo de tareas: crear, editar, completar, eliminar
+- [x] CRUD completo de categorías: crear, editar, eliminar
+- [x] Asignación de categoría a tareas desde el formulario
+- [x] Filtro de tareas por categoría con chips interactivos
 - [x] Formularios reactivos con validación (título requerido, mínimo 3 caracteres)
 - [x] Secciones Pendientes / Completadas con estados vacíos
 - [x] Botones de acción visibles: completar, editar, eliminar
@@ -71,11 +83,11 @@ src/app/
 - [x] Regla de negocio: tarea completada no se edita ni se elimina
 - [x] Metadata visible por tarea: ID abreviado + fecha de creación/completado
 - [x] Modal centrado vía ModalController para crear/editar
+- [x] Selector de color e ícono en formulario de categorías
 - [x] 29 tests unitarios + lint 0 errores
 
 ### Pendiente por implementar
 
-- [ ] Categorías: CRUD de categorías, asignación a tareas, filtrado
 - [ ] Firebase + Remote Config: feature flag para funcionalidad específica
 - [ ] Optimización de rendimiento (OnPush, trackBy, virtual scroll)
 - [ ] Exportación de APK e IPA
@@ -189,7 +201,8 @@ En Xcode: seleccionar dispositivo/simulador > `Product > Archive`
 | Commit | Descripción |
 |---|---|
 | `Initial commit` | Template base de Ionic Angular (blank starter) |
-| *Próximo* | feat: implementar arquitectura base, persistencia y CRUD de tareas |
+| *Paso 1+2* | feat: arquitectura base, Ionic Storage y CRUD de tareas |
+| *Paso 3* | feat: categorías con CRUD, asignación a tareas y filtro |
 
 ---
 

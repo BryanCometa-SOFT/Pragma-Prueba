@@ -7,6 +7,10 @@ const routes: Routes = [
     loadChildren: () => import('./features/tasks/tasks.module').then( m => m.TasksPageModule)
   },
   {
+    path: 'categories',
+    loadChildren: () => import('./features/categories/categories.module').then( m => m.CategoriesPageModule)
+  },
+  {
     path: '',
     redirectTo: 'tasks',
     pathMatch: 'full'

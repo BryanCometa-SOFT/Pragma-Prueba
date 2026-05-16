@@ -1,10 +1,34 @@
 <ion-header>
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
     <ion-title>Mis Tareas</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+
+  <!-- ==================== FILTRO POR CATEGORÍA ==================== -->
+  @if (categoryService.categories().length > 0) {
+    <div class="category-filter">
+      <ion-chip
+        [outline]="selectedCategoryId() !== null"
+        [color]="selectedCategoryId() === null ? 'primary' : 'medium'"
+        (click)="selectedCategoryId.set(null)">
+        Todas
+      </ion-chip>
+      @for (cat of categoryService.categories(); track cat.id) {
+        <ion-chip
+          [outline]="selectedCategoryId() !== cat.id"
+          [color]="selectedCategoryId() === cat.id ? 'primary' : 'medium'"
+          (click)="selectedCategoryId.set(selectedCategoryId() === cat.id ? null : cat.id)">
+          <ion-icon [name]="cat.icon" [color]="selectedCategoryId() === cat.id ? 'primary' : 'medium'"></ion-icon>
+          <ion-label>{{ cat.name }}</ion-label>
+        </ion-chip>
+      }
+    </div>
+  }
 
   <!-- ==================== ESTADO VACÍO GLOBAL ==================== -->
   @if (taskService.tasks().length === 0) {
@@ -22,15 +46,21 @@
   </div>
 
   @if (taskService.tasks().length > 0) {
-    @if (pendingTasks().length > 0) {
+    @if (filteredPendingTasks().length > 0) {
       <ion-list lines="none" class="task-list">
-        @for (task of pendingTasks(); track task.id) {
+        @for (task of filteredPendingTasks(); track task.id) {
 
           <ion-item class="task-item">
             <ion-label>
               <h2>{{ task.title }}</h2>
               @if (task.description) {
                 <p>{{ task.description }}</p>
+              }
+              @if (task.categoryId) {
+                <div class="task-category">
+                  <ion-icon [name]="getCategory(task.categoryId)?.icon || 'folder-outline'"></ion-icon>
+                  <span>{{ getCategory(task.categoryId)?.name }}</span>
+                </div>
               }
               <div class="task-meta">
                 <span class="task-id">{{ formatId(task.id) }}</span>
@@ -53,10 +83,17 @@
         }
       </ion-list>
     } @else {
-      <div class="section-empty">
-        <ion-icon name="checkmark-done-outline"></ion-icon>
-        <span>¡Todo listo! Nada pendiente</span>
-      </div>
+      @if (taskService.pendingCount() > 0) {
+        <div class="section-empty">
+          <ion-icon name="funnel-outline"></ion-icon>
+          <span>No hay tareas con el filtro actual</span>
+        </div>
+      } @else {
+        <div class="section-empty">
+          <ion-icon name="checkmark-done-outline"></ion-icon>
+          <span>¡Todo listo! Nada pendiente</span>
+        </div>
+      }
     }
   }
 
@@ -92,6 +129,12 @@
                 <h2 class="completed-text">{{ task.title }}</h2>
                 @if (task.description) {
                   <p class="completed-text">{{ task.description }}</p>
+                }
+                @if (task.categoryId) {
+                  <div class="task-category">
+                    <ion-icon [name]="getCategory(task.categoryId)?.icon || 'folder-outline'"></ion-icon>
+                    <span>{{ getCategory(task.categoryId)?.name }}</span>
+                  </div>
                 }
                 <div class="task-meta">
                   <span class="task-id">{{ formatId(task.id) }}</span>
