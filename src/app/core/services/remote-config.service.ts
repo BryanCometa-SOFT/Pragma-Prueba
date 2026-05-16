@@ -15,10 +15,10 @@ import { environment } from '../../../environments/environment';
  * sin necesidad de recompilar ni publicar una nueva versión de la app.
  *
  * Flags definidos:
- * - enable_create:     Muestra/oculta el botón de crear tareas.
- * - enable_edit:       Muestra/oculta el botón de editar en cada tarea.
- * - enable_delete:     Muestra/oculta el botón de eliminar en cada tarea.
- * - enable_complete:   Muestra/oculta el botón de completar tareas.
+ * - enable_create:     Muestra/oculta el botón de crear tareas o categorias.
+ * - enable_edit:       Muestra/oculta el botón de editar en cada tarea o categoria.
+ * - enable_delete:     Muestra/oculta el botón de eliminar en cada tarea o categoria.
+ * - enable_complete:   Muestra/oculta el botón de completar tareas o categorias.
  * - enable_categories: Muestra/oculta la sección de categorías.
  *
  * Valores por defecto: todos true (mientras no se reciban de Remote Config).
