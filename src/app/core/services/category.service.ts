@@ -31,8 +31,23 @@ export class CategoryService {
    */
   async init(): Promise<void> {
     const stored = await this.storage.get<Category[]>(this.storageKey);
-    if (stored) {
+    if (stored && stored.length > 0) {
       this.categories.set(stored);
+    }
+  }
+
+  /** Crea 5 categorías de prueba si no hay datos (solo en dev) */
+  seedIfEmpty(): void {
+    if (this.categories().length > 0) return;
+    const defaults = [
+      { name: 'Trabajo', icon: 'briefcase-outline' },
+      { name: 'Personal', icon: 'person-outline' },
+      { name: 'Estudio', icon: 'book-outline' },
+      { name: 'Salud', icon: 'heart-outline' },
+      { name: 'Hogar', icon: 'home-outline' },
+    ];
+    for (const c of defaults) {
+      this.add(c.name, c.icon);
     }
   }
 

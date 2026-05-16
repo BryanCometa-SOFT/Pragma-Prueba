@@ -35,3 +35,9 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 /* @import "@ionic/angular/css/palettes/dark.system.css"; */
+
+/* FAB button spacing fix for iOS curved screens */
+ion-fab {
+  margin-bottom: 20px;
+  margin-inline-end: 10px;
+}

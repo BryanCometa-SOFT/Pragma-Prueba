@@ -31,8 +31,10 @@ import { StorageService } from './core/services/storage.service';
       const categoryService = inject(CategoryService);
       const remoteConfigService = inject(RemoteConfigService);
       await storageService.init();
-      await taskService.init();
       await categoryService.init();
+      categoryService.seedIfEmpty();
+      await taskService.init();
+      taskService.seedIfEmpty(categoryService.categories().map((c) => c.id));
       await remoteConfigService.init();
     }),
 

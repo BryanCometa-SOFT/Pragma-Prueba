@@ -56,7 +56,7 @@ export class TaskService {
    */
   async init(): Promise<void> {
     const stored = await this.storage.get<Task[]>(this.storageKey);
-    if (stored) {
+    if (stored && stored.length > 0) {
       // Al serializar/deserializar JSON, las fechas se convierten a string.
       // Las restauramos a objetos Date para poder formatearlas correctamente.
       const deserialized = stored.map((t) => ({
@@ -66,6 +66,54 @@ export class TaskService {
       }));
       this.tasks.set(deserialized);
     }
+  }
+
+  /** Genera 100 tareas de prueba con categorías aleatorias (solo en dev, si no hay datos) */
+  seedIfEmpty(categoryIds: string[]): void {
+    if (this.tasks().length > 0) return;
+    const titles = [
+      'Comprar víveres', 'Revisar correos', 'Actualizar el perfil', 'Hacer ejercicio',
+      'Leer documentación', 'Preparar presentación', 'Llamar al cliente', 'Enviar reporte',
+      'Revisar pull request', 'Escribir tests', 'Hacer deploy', 'Planificar sprint',
+      'Revisar bugs', 'Actualizar dependencias', 'Refactorizar servicio', 'Crear componente',
+      'Migrar base de datos', 'Optimizar queries', 'Configurar CI/CD', 'Documentar API',
+      'Diseñar mockups', 'Implementar auth', 'Agregar validaciones', 'Corregir estilos',
+      'Hacer code review', 'Actualizar README', 'Configurar logging', 'Crear backups',
+      'Auditar seguridad', 'Optimizar imágenes', 'Agregar i18n', 'Migrar a signals',
+      'Revisar accesibilidad', 'Escribir documentación', 'Hacer benchmark', 'Limpiar código',
+      'Agregar analytics', 'Configurar alerts', 'Revisar memory leaks', 'Actualizar packages',
+      'Diseñar arquitectura', 'Crear diagramas', 'Hacer user testing', 'Escribir historias',
+      'Priorizar backlog', 'Revisar métricas', 'Configurar entornos', 'Crear scripts',
+      'Auditar dependencias', 'Optimizar bundle', 'Agregar feature flags', 'Migrar storage',
+      'Crear seed data', 'Agregar rate limiting', 'Configurar CORS', 'Revisar logs',
+      'Actualizar certificados', 'Hacer pentesting', 'Configurar CDN', 'Optimizar lazy loading',
+      'Agregar skeletons', 'Crear interceptors', 'Migrar formularios', 'Agregar guards',
+      'Configurar interceptores', 'Revisar suscripciones', 'Optimizar change detection',
+      'Agregar error handling', 'Crear pipes', 'Migrar a standalone', 'Agregar temas',
+      'Configurar dark mode', 'Revisar animations', 'Agregar skeletons', 'Crear estado vacío',
+      'Agregar paginación', 'Configurar infinite scroll', 'Revisar polyfills', 'Agregar service worker',
+      'Configurar PWA', 'Revisar bundle size', 'Agregar trackBy', 'Optimizar ngFor',
+      'Crear resolvers', 'Agregar breadcrumbs', 'Configurar meta tags', 'Revisar SEO',
+      'Agregar sitemap', 'Crear RSS feed', 'Configurar redirects', 'Revisar dead code',
+      'Agregar code splitting', 'Crear shared module', 'Migrar pipes puros', 'Agregar tipado estricto',
+      'Revisar any types', 'Agregar generics', 'Crear utility types', 'Revisar imports circulares',
+    ];
+    const now = Date.now();
+    for (let i = 0; i < 100; i++) {
+      const completed = i >= 75;
+      const daysAgo = Math.floor(Math.random() * 30);
+      const createdAt = new Date(now - daysAgo * 86400000 - Math.random() * 86400000);
+      this.tasks.update((tasks) => [...tasks, {
+        id: crypto.randomUUID(),
+        title: titles[i % titles.length] + (i >= titles.length ? ` #${Math.floor(i / titles.length) + 1}` : ''),
+        description: Math.random() > 0.5 ? `Detalle de la tarea de prueba #${i + 1}` : '',
+        completed,
+        categoryId: categoryIds.length > 0 ? categoryIds[Math.floor(Math.random() * categoryIds.length)] : null,
+        createdAt,
+        completedAt: completed ? new Date(createdAt.getTime() + Math.random() * 86400000) : null,
+      }]);
+    }
+    this.persist();
   }
 
   /**
